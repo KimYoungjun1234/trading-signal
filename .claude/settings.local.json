@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:in.tradingview.com)",
+      "WebFetch(domain:www.tradingview.com)",
+      "Bash(./gradlew compileJava:*)",
+      "Bash(./gradlew bootRun:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9:*)",
+      "Bash(curl:*)",
+      "Bash(~/Library/Application Support/JetBrains/IntelliJIdea*/idea.vmoptions)",
+      "Bash(git init:*)"
+    ]
+  }
+}

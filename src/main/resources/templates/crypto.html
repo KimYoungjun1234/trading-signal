@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XRP / BTC 선물 실시간 가격</title>
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            height: 100vh;
+            padding: 5px;
+            overflow: hidden;
+        }
+        .split-container {
+            display: flex;
+            height: calc(100vh - 10px);
+        }
+        .chart-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 8px;
+            overflow: hidden;
+            min-width: 200px;
+        }
+        .divider {
+            width: 6px;
+            cursor: col-resize;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            flex-shrink: 0;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .divider:hover,
+        .divider.active {
+            background: rgba(0, 212, 255, 0.4);
+        }
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 1px;
+        }
+        .divider:hover::after,
+        .divider.active::after {
+            background: rgba(0, 212, 255, 0.8);
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+        .chart-title {
+            color: #00d4ff;
+            font-size: 0.7rem;
+        }
+        .sub-chart-title {
+            color: #888;
+            font-size: 0.65rem;
+            margin-top: 2px;
+            margin-bottom: 1px;
+        }
+        .price-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .coin-name {
+            color: #00d4ff;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .coin-name.btc {
+            color: #f7931a;
+        }
+        .price {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .unit {
+            color: #888;
+            font-size: 0.7rem;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+        .status-text {
+            color: #888;
+            font-size: 0.65rem;
+        }
+        .main-chart {
+            width: 100%;
+            height: 42vh;
+        }
+        .sub-chart {
+            width: 100%;
+            height: 22vh;
+            margin-top: 3px;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 3px;
+        }
+        .nav-btn {
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            color: #00d4ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.65rem;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            background: rgba(0, 212, 255, 0.4);
+        }
+        .countdown {
+            color: #FFD700;
+            font-size: 0.75rem;
+            font-weight: bold;
+            min-width: 30px;
+        }
+        .hover-change {
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .hover-change.up {
+            color: #26a69a;
+        }
+        .hover-change.down {
+            color: #ef5350;
+        }
+        .daily-change {
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+        .daily-change.up {
+            color: #26a69a;
+            background: rgba(38, 166, 154, 0.15);
+        }
+        .daily-change.down {
+            color: #ef5350;
+            background: rgba(239, 83, 80, 0.15);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-container">
+        <!-- Left Panel: XRP -->
+        <div class="chart-panel" id="xrpPanel">
+            <div class="chart-header">
+                <div class="chart-title">1분봉 (EMA50/EMA200)</div>
+                <div class="price-info">
+                    <span class="coin-name">XRP 선물</span>
+                    <span class="daily-change" id="xrpDailyChange">0%</span>
+                    <span class="hover-change" id="xrpHoverChange"></span>
+                    <span class="price" id="xrpPrice">-</span>
+                    <span class="unit">USDT</span>
+                    <div class="status">
+                        <div class="status-dot" id="xrpStatusDot"></div>
+                    </div>
+                    <span class="countdown" id="countdown">60s</span>
+                    <div class="nav-buttons">
+                        <button class="nav-btn" id="xrpBtnFirst">&#171;</button>
+                        <button class="nav-btn" id="xrpBtnLast">&#187;</button>
+                    </div>
+                </div>
+            </div>
+            <div class="main-chart" id="xrpChart"></div>
+            <div class="sub-chart-title">SMI</div>
+            <div class="sub-chart" id="xrpSmiChart"></div>
+            <div class="sub-chart-title">MA Angles</div>
+            <div class="sub-chart" id="xrpMaAnglesChart"></div>
+        </div>
+
+        <!-- Draggable Divider -->
+        <div class="divider" id="divider"></div>
+
+        <!-- Right Panel: BTC -->
+        <div class="chart-panel" id="btcPanel">
+            <div class="chart-header">
+                <div class="chart-title">1분봉 (EMA50/EMA200)</div>
+                <div class="price-info">
+                    <span class="coin-name btc">BTC 선물</span>
+                    <span class="daily-change" id="btcDailyChange">0%</span>
+                    <span class="hover-change" id="btcHoverChange"></span>
+                    <span class="price" id="btcPrice">-</span>
+                    <span class="unit">USDT</span>
+                    <div class="status">
+                        <div class="status-dot" id="btcStatusDot"></div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn" id="btcBtnFirst">&#171;</button>
+                        <button class="nav-btn" id="btcBtnLast">&#187;</button>
+                    </div>
+                </div>
+            </div>
+            <div class="main-chart" id="btcChart"></div>
+            <div class="sub-chart-title">SMI</div>
+            <div class="sub-chart" id="btcSmiChart"></div>
+            <div class="sub-chart-title">MA Angles</div>
+            <div class="sub-chart" id="btcMaAnglesChart"></div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const KST_OFFSET = 9 * 60 * 60;
+
+        // 1분봉 카운트다운
+        const countdownEl = document.getElementById('countdown');
+        function updateCountdown() {
+            const now = new Date();
+            countdownEl.textContent = (60 - now.getSeconds()) + 's';
+        }
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // --- 드래그 리사이즈 ---
+        const splitContainer = document.querySelector('.split-container');
+        const xrpPanel = document.getElementById('xrpPanel');
+        const btcPanel = document.getElementById('btcPanel');
+        const divider = document.getElementById('divider');
+
+        // 초기 50:50
+        let leftRatio = 0.5;
+        function applyPanelSizes() {
+            const totalWidth = splitContainer.clientWidth - divider.offsetWidth;
+            xrpPanel.style.width = (totalWidth * leftRatio) + 'px';
+            btcPanel.style.width = (totalWidth * (1 - leftRatio)) + 'px';
+        }
+        applyPanelSizes();
+
+        let isDragging = false;
+        divider.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            divider.classList.add('active');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = splitContainer.getBoundingClientRect();
+            const dividerWidth = divider.offsetWidth;
+            const x = e.clientX - rect.left;
+            const totalWidth = rect.width - dividerWidth;
+            leftRatio = Math.max(0.15, Math.min(0.85, x / rect.width));
+            applyPanelSizes();
+            window.dispatchEvent(new Event('resize'));
+        });
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            divider.classList.remove('active');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        });
+
+        window.addEventListener('resize', applyPanelSizes);
+
+        // 차트 공통 옵션 생성
+        function createChartOptions() {
+            return {
+                layout: {
+                    background: { type: 'solid', color: 'transparent' },
+                    textColor: '#888',
+                    fontSize: 8,
+                },
+                grid: {
+                    vertLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                    horzLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                },
+                crosshair: {
+                    mode: LightweightCharts.CrosshairMode.Normal,
+                },
+                rightPriceScale: {
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    scaleMargins: { top: 0.1, bottom: 0.1 },
+                    autoScale: true,
+                    entireTextOnly: false,
+                },
+                timeScale: {
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    timeVisible: true,
+                    secondsVisible: false,
+                    barSpacing: 12,
+                    minBarSpacing: 5,
+                    rightOffset: 10,
+                },
+            };
+        }
+
+        // 코인별 차트 셋업 함수
+        function setupCoinCharts(config) {
+            const { prefix, streamUrl, candlesUrl, smiUrl, maAnglesUrl, emaCloudUrl, pricePrecision, priceMinMove, updateTitle, titleLabel } = config;
+
+            // DOM elements
+            const priceEl = document.getElementById(prefix + 'Price');
+            const statusDot = document.getElementById(prefix + 'StatusDot');
+            const hoverChangeEl = document.getElementById(prefix + 'HoverChange');
+            const dailyChangeEl = document.getElementById(prefix + 'DailyChange');
+
+            // Main chart
+            const chartContainer = document.getElementById(prefix + 'Chart');
+            const chart = LightweightCharts.createChart(chartContainer, createChartOptions());
+
+            // SMI chart
+            const smiContainer = document.getElementById(prefix + 'SmiChart');
+            const smiChart = LightweightCharts.createChart(smiContainer, createChartOptions());
+
+            // MA Angles chart
+            const maAnglesContainer = document.getElementById(prefix + 'MaAnglesChart');
+            const maAnglesChart = LightweightCharts.createChart(maAnglesContainer, createChartOptions());
+
+            // 차트 시간축 동기화
+            let isSyncing = false;
+            function syncChartsTimeRange(sourceChart, timeRange) {
+                if (isSyncing || !timeRange) return;
+                isSyncing = true;
+                try {
+                    if (sourceChart !== chart) chart.timeScale().setVisibleRange(timeRange);
+                    if (sourceChart !== smiChart) smiChart.timeScale().setVisibleRange(timeRange);
+                    if (sourceChart !== maAnglesChart) maAnglesChart.timeScale().setVisibleRange(timeRange);
+                } catch (e) {}
+                isSyncing = false;
+            }
+            chart.timeScale().subscribeVisibleTimeRangeChange(range => syncChartsTimeRange(chart, range));
+            smiChart.timeScale().subscribeVisibleTimeRangeChange(range => syncChartsTimeRange(smiChart, range));
+            maAnglesChart.timeScale().subscribeVisibleTimeRangeChange(range => syncChartsTimeRange(maAnglesChart, range));
+
+            // Candlestick series
+            const candlestickSeries = chart.addCandlestickSeries({
+                upColor: '#26a69a',
+                downColor: '#ef5350',
+                borderDownColor: '#ef5350',
+                borderUpColor: '#26a69a',
+                wickDownColor: '#ef5350',
+                wickUpColor: '#26a69a',
+                priceFormat: {
+                    type: 'price',
+                    precision: pricePrecision,
+                    minMove: priceMinMove,
+                },
+                priceLineVisible: true,
+                lastValueVisible: true,
+                priceLineColor: '#00d4ff',
+                priceLineWidth: 1,
+            });
+
+            // EMA Cloud series
+            const emaCloudUpSeries = chart.addAreaSeries({
+                topColor: 'rgba(0, 255, 0, 0.3)',
+                bottomColor: 'rgba(0, 255, 0, 0.1)',
+                lineColor: 'transparent',
+                priceLineVisible: false,
+            });
+            const emaCloudDownSeries = chart.addAreaSeries({
+                topColor: 'rgba(255, 0, 0, 0.3)',
+                bottomColor: 'rgba(255, 0, 0, 0.1)',
+                lineColor: 'transparent',
+                priceLineVisible: false,
+            });
+            const fastEMASeries = chart.addLineSeries({
+                color: '#FFD700',
+                lineWidth: 2,
+                priceLineVisible: false,
+            });
+            const slowEMASeries = chart.addLineSeries({
+                color: '#2196F3',
+                lineWidth: 2,
+                priceLineVisible: false,
+            });
+
+            // SMI series
+            const overboughtSeries = smiChart.addBaselineSeries({
+                baseValue: { type: 'price', price: 40 },
+                topFillColor1: 'rgba(38, 166, 154, 0.4)',
+                topFillColor2: 'rgba(38, 166, 154, 0.4)',
+                bottomFillColor1: 'transparent',
+                bottomFillColor2: 'transparent',
+                topLineColor: 'transparent',
+                bottomLineColor: 'transparent',
+                priceLineVisible: false,
+            });
+            const oversoldSeries = smiChart.addBaselineSeries({
+                baseValue: { type: 'price', price: -40 },
+                topFillColor1: 'transparent',
+                topFillColor2: 'transparent',
+                bottomFillColor1: 'rgba(239, 83, 80, 0.4)',
+                bottomFillColor2: 'rgba(239, 83, 80, 0.4)',
+                topLineColor: 'transparent',
+                bottomLineColor: 'transparent',
+                priceLineVisible: false,
+            });
+            const overboughtLine = smiChart.addLineSeries({
+                color: 'rgba(150, 150, 150, 0.5)',
+                lineWidth: 1,
+                lineStyle: 2,
+                priceLineVisible: false,
+            });
+            const oversoldLine = smiChart.addLineSeries({
+                color: 'rgba(150, 150, 150, 0.5)',
+                lineWidth: 1,
+                lineStyle: 2,
+                priceLineVisible: false,
+            });
+            const smiLineSeries = smiChart.addLineSeries({
+                color: '#FFFFFF',
+                lineWidth: 2,
+                priceLineVisible: false,
+            });
+            const smiSignalSeries = smiChart.addLineSeries({
+                color: '#FF0000',
+                lineWidth: 1,
+                priceLineVisible: false,
+            });
+
+            // MA Angles series
+            const maAnglesZeroLine = maAnglesChart.addLineSeries({
+                color: 'rgba(150, 150, 150, 0.5)',
+                lineWidth: 1,
+                lineStyle: 2,
+                priceLineVisible: false,
+            });
+            // 4색 영역 그래프: 2개 baselineSeries를 겹침
+            // 연한 색 (하단 레이어) - slope방향과 ma27 트렌드 불일치
+            const maAnglesLightSeries = maAnglesChart.addBaselineSeries({
+                baseValue: { type: 'price', price: 0 },
+                topFillColor1: 'rgba(165, 214, 167, 0.5)',
+                topFillColor2: 'rgba(165, 214, 167, 0.5)',
+                bottomFillColor1: 'rgba(255, 138, 128, 0.5)',
+                bottomFillColor2: 'rgba(255, 138, 128, 0.5)',
+                topLineColor: 'transparent',
+                bottomLineColor: 'transparent',
+                priceLineVisible: false,
+                lastValueVisible: false,
+            });
+            // 진한 색 (상단 레이어) - slope방향과 ma27 트렌드 일치
+            const maAnglesDarkSeries = maAnglesChart.addBaselineSeries({
+                baseValue: { type: 'price', price: 0 },
+                topFillColor1: 'rgba(0, 200, 83, 0.6)',
+                topFillColor2: 'rgba(0, 200, 83, 0.6)',
+                bottomFillColor1: 'rgba(255, 23, 68, 0.6)',
+                bottomFillColor2: 'rgba(255, 23, 68, 0.6)',
+                topLineColor: 'transparent',
+                bottomLineColor: 'transparent',
+                priceLineVisible: false,
+                lastValueVisible: false,
+            });
+
+            // State
+            let currentCandleData = [];
+            let isFirstLoad = true;
+            let totalCandles = 0;
+            let futureTimeSeries = null;
+
+            // Load candles and indicators
+            async function loadCandles() {
+                try {
+                    const currentRange = !isFirstLoad ? chart.timeScale().getVisibleRange() : null;
+
+                    const [candlesResponse, smiResponse, maAnglesResponse, emaCloudResponse] = await Promise.all([
+                        fetch(candlesUrl),
+                        fetch(smiUrl),
+                        fetch(maAnglesUrl),
+                        fetch(emaCloudUrl)
+                    ]);
+
+                    const candles = await candlesResponse.json();
+                    const smiResult = await smiResponse.json();
+                    const maAnglesResult = await maAnglesResponse.json();
+                    const emaCloudResult = await emaCloudResponse.json();
+
+                    if (candles.length === 0) return;
+
+                    const chartData = candles.map(c => ({
+                        time: c.time + KST_OFFSET,
+                        open: c.open,
+                        high: c.high,
+                        low: c.low,
+                        close: c.close
+                    }));
+
+                    const lastTime = chartData[chartData.length - 1].time;
+                    const futureData = [];
+                    for (let i = 1; i <= 60; i++) {
+                        futureData.push({ time: lastTime + (i * 60) });
+                    }
+
+                    totalCandles = chartData.length;
+                    candlestickSeries.setData(chartData);
+
+                    if (!futureTimeSeries) {
+                        futureTimeSeries = chart.addLineSeries({
+                            color: 'transparent',
+                            lineWidth: 0,
+                            priceLineVisible: false,
+                            lastValueVisible: false,
+                        });
+                    }
+                    futureTimeSeries.setData(futureData);
+
+                    // EMA Cloud
+                    if (emaCloudResult.data && emaCloudResult.data.length > 0) {
+                        const fastEMA = emaCloudResult.data.map(d => ({ time: d.time + KST_OFFSET, value: d.fastEMA }));
+                        const slowEMA = emaCloudResult.data.map(d => ({ time: d.time + KST_OFFSET, value: d.slowEMA }));
+                        const upCloudData = emaCloudResult.data.map(d => ({
+                            time: d.time + KST_OFFSET,
+                            value: d.upTrend ? d.fastEMA : d.slowEMA
+                        }));
+                        const downCloudData = emaCloudResult.data.map(d => ({
+                            time: d.time + KST_OFFSET,
+                            value: d.downTrend ? d.fastEMA : d.slowEMA
+                        }));
+                        emaCloudUpSeries.setData(upCloudData);
+                        emaCloudDownSeries.setData(downCloudData);
+                        fastEMASeries.setData(fastEMA);
+                        slowEMASeries.setData(slowEMA);
+                    }
+
+                    // SMI
+                    if (smiResult.data && smiResult.data.length > 0) {
+                        const smi = smiResult.data.map(d => ({ time: d.time + KST_OFFSET, value: d.smi }));
+                        const signal = smiResult.data.map(d => ({ time: d.time + KST_OFFSET, value: d.signal }));
+                        const lineData40 = smi.map(s => ({ time: s.time, value: smiResult.overbought }));
+                        const lineDataMinus40 = smi.map(s => ({ time: s.time, value: smiResult.oversold }));
+                        overboughtLine.setData(lineData40);
+                        oversoldLine.setData(lineDataMinus40);
+                        overboughtSeries.setData(smi);
+                        oversoldSeries.setData(smi);
+                        smiLineSeries.setData(smi);
+                        smiSignalSeries.setData(signal);
+                    }
+
+                    // MA Angles (4색 영역 그래프)
+                    if (maAnglesResult.data && maAnglesResult.data.length > 0) {
+                        const zeroLine = maAnglesResult.data.map(d => ({ time: d.time + KST_OFFSET, value: 0 }));
+                        maAnglesZeroLine.setData(zeroLine);
+
+                        // 연한 색: slope방향과 ma27 트렌드 불일치 구간만 값 표시
+                        const lightData = maAnglesResult.data.map(d => {
+                            const unconfirmed = (d.jmaSlope >= 0 && !d.ma27Rising) || (d.jmaSlope < 0 && !d.ma27Falling);
+                            return { time: d.time + KST_OFFSET, value: unconfirmed ? d.jmaSlope : 0 };
+                        });
+                        // 진한 색: slope방향과 ma27 트렌드 일치 구간만 값 표시
+                        const darkData = maAnglesResult.data.map(d => {
+                            const confirmed = (d.jmaSlope >= 0 && d.ma27Rising) || (d.jmaSlope < 0 && d.ma27Falling);
+                            return { time: d.time + KST_OFFSET, value: confirmed ? d.jmaSlope : 0 };
+                        });
+                        maAnglesLightSeries.setData(lightData);
+                        maAnglesDarkSeries.setData(darkData);
+                    }
+
+                    currentCandleData = chartData;
+
+                    // === 롱/숏 포지션 신호 감지 ===
+                    const markers = [];
+
+                    // 인디케이터 데이터를 time 기준 Map으로 변환
+                    const emaByTime = new Map();
+                    if (emaCloudResult.data) {
+                        emaCloudResult.data.forEach(d => emaByTime.set(d.time, d));
+                    }
+                    const maByTime = new Map();
+                    if (maAnglesResult.data) {
+                        maAnglesResult.data.forEach(d => maByTime.set(d.time, d));
+                    }
+                    const smiByTime = new Map();
+                    const smiDataArr = smiResult.data || [];
+                    smiDataArr.forEach(d => smiByTime.set(d.time, d));
+
+                    // 거래량 이동평균 (20봉 SMA)
+                    const VOL_MA_LEN = 20;
+                    const volumeMA = new Array(candles.length).fill(0);
+                    for (let vi = VOL_MA_LEN - 1; vi < candles.length; vi++) {
+                        let vSum = 0;
+                        for (let vj = 0; vj < VOL_MA_LEN; vj++) vSum += candles[vi - vj].volume;
+                        volumeMA[vi] = vSum / VOL_MA_LEN;
+                    }
+
+                    for (let si = 1; si < candles.length; si++) {
+                        const t = candles[si].time;
+                        const tPrev = candles[si - 1].time;
+                        const ema = emaByTime.get(t);
+                        const ma = maByTime.get(t);
+                        const smiCur = smiByTime.get(t);
+                        const smiPrev = smiByTime.get(tPrev);
+                        if (!ema || !ma || !smiCur || !smiPrev) continue;
+                        const volOk = si >= VOL_MA_LEN && candles[si - 1].volume > volumeMA[si - 1];
+                        if (!volOk) continue;
+
+                        // --- 롱포지션: 상승 트렌드 ---
+                        // SMI 크로스: -40 이하 또는 -40 약간 위(-20 이하)에서 상향 크로스
+                        if (ema.upTrend) {
+                            const smiCrossUp = smiCur.smi > smiCur.signal && smiPrev.smi <= smiPrev.signal;
+                            const nearOversold = smiPrev.smi >= -55 && smiPrev.smi <= -25;
+                            if (smiCrossUp && nearOversold && ma.jmaSlope >= 0 && ma.ma27Rising) {
+                                markers.push({
+                                    time: t + KST_OFFSET,
+                                    position: 'belowBar',
+                                    color: '#00ff88',
+                                    shape: 'arrowUp',
+                                    text: '롱포지션'
+                                });
+                            }
+                        }
+
+                        // --- 숏포지션: 하락 트렌드 ---
+                        // SMI 크로스: +40 이상 또는 +40 약간 아래(+20 이상)에서 하향 크로스
+                        if (ema.downTrend) {
+                            const smiCrossDown = smiCur.smi < smiCur.signal && smiPrev.smi >= smiPrev.signal;
+                            const nearOverbought = smiPrev.smi >= 25 && smiPrev.smi <= 55;
+                            if (smiCrossDown && nearOverbought && ma.jmaSlope < 0 && ma.ma27Falling) {
+                                markers.push({
+                                    time: t + KST_OFFSET,
+                                    position: 'aboveBar',
+                                    color: '#ff4444',
+                                    shape: 'arrowDown',
+                                    text: '숏포지션'
+                                });
+                            }
+                        }
+                    }
+
+                    // 마지막 봉 등락률 마커
+                    if (chartData.length > 0) {
+                        const lastCandle = chartData[chartData.length - 1];
+                        const changePercent = ((lastCandle.close - lastCandle.open) / lastCandle.open * 100).toFixed(2);
+                        const isUp = lastCandle.close >= lastCandle.open;
+                        markers.push({
+                            time: lastCandle.time,
+                            position: 'aboveBar',
+                            color: isUp ? '#26a69a' : '#ef5350',
+                            shape: 'arrowDown',
+                            text: (isUp ? '+' : '') + changePercent + '%'
+                        });
+                    }
+
+                    markers.sort((a, b) => a.time - b.time);
+                    candlestickSeries.setMarkers(markers);
+
+                    if (isFirstLoad) {
+                        chart.timeScale().scrollToRealTime();
+                        isFirstLoad = false;
+                    } else if (currentRange) {
+                        chart.timeScale().setVisibleRange(currentRange);
+                    }
+                } catch (e) {
+                    console.error('Failed to load candles for ' + prefix + ':', e);
+                }
+            }
+
+            loadCandles();
+            setInterval(loadCandles, 1000);
+
+            // Price SSE stream
+            function connect() {
+                const eventSource = new EventSource(streamUrl);
+                eventSource.onopen = function() {
+                    statusDot.style.background = '#00ff88';
+                };
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    if (data.price && data.price !== '0') {
+                        const price = parseFloat(data.price);
+                        priceEl.textContent = price.toFixed(pricePrecision);
+                        if (updateTitle) {
+                            document.title = titleLabel + ' ' + price.toFixed(pricePrecision) + ' USDT';
+                        }
+                        // 일봉 등락률 표시
+                        if (data.changePercent && data.changePercent !== '0') {
+                            const cp = parseFloat(data.changePercent);
+                            const sign = cp >= 0 ? '+' : '';
+                            dailyChangeEl.textContent = sign + cp.toFixed(2) + '%';
+                            dailyChangeEl.className = 'daily-change ' + (cp >= 0 ? 'up' : 'down');
+                        }
+                        candlestickSeries.applyOptions({
+                            priceLineVisible: true,
+                            lastValueVisible: true,
+                        });
+                    }
+                };
+                eventSource.onerror = function() {
+                    statusDot.style.background = '#ff4444';
+                    eventSource.close();
+                    setTimeout(connect, 3000);
+                };
+            }
+            connect();
+
+            // Crosshair sync
+            let isCrosshairSyncing = false;
+            function getCrosshairDataPoint(series, param) {
+                if (!param || !param.time || !param.seriesData) return null;
+                return param.seriesData.get(series) || null;
+            }
+            function syncCrosshair(sourceChart, time, point) {
+                if (isCrosshairSyncing || !time) return;
+                isCrosshairSyncing = true;
+                try {
+                    if (sourceChart !== chart && point) {
+                        chart.setCrosshairPosition(point.close || point.value || 0, time, candlestickSeries);
+                    }
+                    if (sourceChart !== smiChart) {
+                        smiChart.setCrosshairPosition(0, time, smiLineSeries);
+                    }
+                    if (sourceChart !== maAnglesChart) {
+                        maAnglesChart.setCrosshairPosition(0, time, maAnglesDarkSeries);
+                    }
+                } catch (e) {}
+                isCrosshairSyncing = false;
+            }
+
+            chart.subscribeCrosshairMove((param) => {
+                if (!param || !param.time) {
+                    hoverChangeEl.textContent = '';
+                    hoverChangeEl.className = 'hover-change';
+                    return;
+                }
+                const point = getCrosshairDataPoint(candlestickSeries, param);
+                syncCrosshair(chart, param.time, point);
+                const hoveredCandle = currentCandleData.find(c => c.time === param.time);
+                if (hoveredCandle) {
+                    const changePercent = ((hoveredCandle.close - hoveredCandle.open) / hoveredCandle.open * 100).toFixed(2);
+                    const isUp = hoveredCandle.close >= hoveredCandle.open;
+                    hoverChangeEl.textContent = (isUp ? '+' : '') + changePercent + '%';
+                    hoverChangeEl.className = 'hover-change ' + (isUp ? 'up' : 'down');
+                } else {
+                    hoverChangeEl.textContent = '';
+                    hoverChangeEl.className = 'hover-change';
+                }
+            });
+            smiChart.subscribeCrosshairMove((param) => {
+                if (!param || !param.time) return;
+                syncCrosshair(smiChart, param.time, getCrosshairDataPoint(smiLineSeries, param));
+            });
+            maAnglesChart.subscribeCrosshairMove((param) => {
+                if (!param || !param.time) return;
+                syncCrosshair(maAnglesChart, param.time, getCrosshairDataPoint(maAnglesDarkSeries, param));
+            });
+
+            // Navigation
+            const visibleBars = 40;
+            document.getElementById(prefix + 'BtnFirst').addEventListener('click', () => {
+                if (totalCandles > 0) {
+                    chart.timeScale().setVisibleLogicalRange({ from: 0, to: visibleBars - 1 });
+                }
+            });
+            document.getElementById(prefix + 'BtnLast').addEventListener('click', () => {
+                if (totalCandles > 0) {
+                    chart.timeScale().setVisibleLogicalRange({ from: totalCandles - visibleBars, to: totalCandles - 1 });
+                }
+            });
+
+            // Resize
+            window.addEventListener('resize', () => {
+                chart.applyOptions({ width: chartContainer.clientWidth });
+                smiChart.applyOptions({ width: smiContainer.clientWidth });
+                maAnglesChart.applyOptions({ width: maAnglesContainer.clientWidth });
+            });
+        }
+
+        // XRP 차트 셋업
+        setupCoinCharts({
+            prefix: 'xrp',
+            streamUrl: /*[[@{/api/crypto/xrp/stream}]]*/ '/api/crypto/xrp/stream',
+            candlesUrl: /*[[@{/api/crypto/xrp/candles}]]*/ '/api/crypto/xrp/candles',
+            smiUrl: /*[[@{/api/crypto/xrp/smi}]]*/ '/api/crypto/xrp/smi',
+            maAnglesUrl: /*[[@{/api/crypto/xrp/ma-angles}]]*/ '/api/crypto/xrp/ma-angles',
+            emaCloudUrl: /*[[@{/api/crypto/xrp/ema-cloud}]]*/ '/api/crypto/xrp/ema-cloud',
+            pricePrecision: 4,
+            priceMinMove: 0.0001,
+            updateTitle: true,
+            titleLabel: 'XRP',
+        });
+
+        // BTC 차트 셋업
+        setupCoinCharts({
+            prefix: 'btc',
+            streamUrl: /*[[@{/api/crypto/btc/stream}]]*/ '/api/crypto/btc/stream',
+            candlesUrl: /*[[@{/api/crypto/btc/candles}]]*/ '/api/crypto/btc/candles',
+            smiUrl: /*[[@{/api/crypto/btc/smi}]]*/ '/api/crypto/btc/smi',
+            maAnglesUrl: /*[[@{/api/crypto/btc/ma-angles}]]*/ '/api/crypto/btc/ma-angles',
+            emaCloudUrl: /*[[@{/api/crypto/btc/ema-cloud}]]*/ '/api/crypto/btc/ema-cloud',
+            pricePrecision: 1,
+            priceMinMove: 0.1,
+            updateTitle: false,
+        });
+    </script>
+</body>
+</html>
