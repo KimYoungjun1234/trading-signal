@@ -1,5 +1,5 @@
 server:
-  port: 5000
+  port: 8080
 
 spring:
   autoconfigure:
@@ -8,4 +8,8 @@ spring:
       - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 
 slack:
-  webhook-url: ${SLACK_WEBHOOK_URL}
+  webhook-url: ${SLACK_WEBHOOK_URL:}
+
+telegram:
+  bot-token: ${TELEGRAM_BOT_TOKEN:}
+  chat-id: ${TELEGRAM_CHAT_ID:}

@@ -10,7 +10,9 @@ import org.example.crypto.service.GateIoWebSocketClient;
 import org.example.crypto.service.MAAnglesIndicatorService;
 import org.example.crypto.service.SMIIndicatorService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -51,23 +53,29 @@ public class CryptoController {
     }
 
     @GetMapping("/xrp/candles")
-    public List<CandleStick> getXrpCandles() {
-        return candleStickService.getCandles("XRP_USDT");
+    public List<CandleStick> getXrpCandles(@RequestParam(defaultValue = "1m") String interval) {
+        return candleStickService.getCandles("XRP_USDT", interval);
     }
 
     @GetMapping("/xrp/smi")
-    public SMIResult getXrpSMI() {
-        return smiIndicatorService.calculate(candleStickService.getCandles("XRP_USDT"));
+    public SMIResult getXrpSMI(@RequestParam(defaultValue = "1m") String interval) {
+        return smiIndicatorService.calculate(candleStickService.getCandles("XRP_USDT", interval));
     }
 
     @GetMapping("/xrp/ma-angles")
-    public MAAnglesResult getXrpMAAngles() {
-        return maAnglesIndicatorService.calculate(candleStickService.getCandles("XRP_USDT"));
+    public MAAnglesResult getXrpMAAngles(@RequestParam(defaultValue = "1m") String interval) {
+        return maAnglesIndicatorService.calculate(candleStickService.getCandles("XRP_USDT", interval));
     }
 
     @GetMapping("/xrp/ema-cloud")
-    public EMACloudResult getXrpEMACloud() {
-        return emaCloudIndicatorService.calculate(candleStickService.getCandles("XRP_USDT"));
+    public EMACloudResult getXrpEMACloud(@RequestParam(defaultValue = "1m") String interval) {
+        return emaCloudIndicatorService.calculate(candleStickService.getCandles("XRP_USDT", interval));
+    }
+
+    @PostMapping("/xrp/interval")
+    public Map<String, String> changeXrpInterval(@RequestParam(defaultValue = "1m") String interval) {
+        webSocketClient.changeInterval("XRP_USDT", interval);
+        return Map.of("status", "ok", "contract", "XRP_USDT", "interval", interval);
     }
 
     // === BTC Endpoints ===
@@ -83,22 +91,28 @@ public class CryptoController {
     }
 
     @GetMapping("/btc/candles")
-    public List<CandleStick> getBtcCandles() {
-        return candleStickService.getCandles("BTC_USDT");
+    public List<CandleStick> getBtcCandles(@RequestParam(defaultValue = "1m") String interval) {
+        return candleStickService.getCandles("BTC_USDT", interval);
     }
 
     @GetMapping("/btc/smi")
-    public SMIResult getBtcSMI() {
-        return smiIndicatorService.calculate(candleStickService.getCandles("BTC_USDT"));
+    public SMIResult getBtcSMI(@RequestParam(defaultValue = "1m") String interval) {
+        return smiIndicatorService.calculate(candleStickService.getCandles("BTC_USDT", interval));
     }
 
     @GetMapping("/btc/ma-angles")
-    public MAAnglesResult getBtcMAAngles() {
-        return maAnglesIndicatorService.calculate(candleStickService.getCandles("BTC_USDT"));
+    public MAAnglesResult getBtcMAAngles(@RequestParam(defaultValue = "1m") String interval) {
+        return maAnglesIndicatorService.calculate(candleStickService.getCandles("BTC_USDT", interval));
     }
 
     @GetMapping("/btc/ema-cloud")
-    public EMACloudResult getBtcEMACloud() {
-        return emaCloudIndicatorService.calculate(candleStickService.getCandles("BTC_USDT"));
+    public EMACloudResult getBtcEMACloud(@RequestParam(defaultValue = "1m") String interval) {
+        return emaCloudIndicatorService.calculate(candleStickService.getCandles("BTC_USDT", interval));
+    }
+
+    @PostMapping("/btc/interval")
+    public Map<String, String> changeBtcInterval(@RequestParam(defaultValue = "1m") String interval) {
+        webSocketClient.changeInterval("BTC_USDT", interval);
+        return Map.of("status", "ok", "contract", "BTC_USDT", "interval", interval);
     }
 }

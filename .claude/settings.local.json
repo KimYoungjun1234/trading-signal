@@ -13,7 +13,9 @@
       "Bash(git init:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(python3:*)"
     ]
   }
 }

@@ -14,7 +14,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #000000;
-            height: 100vh;
+            min-height: 100vh;
             padding: 5px;
             overflow: hidden;
         }
@@ -27,8 +27,10 @@
             backdrop-filter: blur(10px);
             border-radius: 10px;
             padding: 8px;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             min-width: 200px;
+            -webkit-overflow-scrolling: touch;
         }
         .divider {
             width: 6px;
@@ -56,6 +58,34 @@
         }
         .divider:hover::after,
         .divider.active::after {
+            background: rgba(0, 212, 255, 0.8);
+        }
+        .h-divider {
+            height: 6px;
+            cursor: row-resize;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            flex-shrink: 0;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .h-divider:hover,
+        .h-divider.active {
+            background: rgba(0, 212, 255, 0.4);
+        }
+        .h-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 1px;
+        }
+        .h-divider:hover::after,
+        .h-divider.active::after {
             background: rgba(0, 212, 255, 0.8);
         }
         .chart-header {
@@ -114,11 +144,16 @@
         }
         .main-chart {
             width: 100%;
-            height: 42vh;
+            height: 35vh;
+        }
+        .vol-chart {
+            width: 100%;
+            height: 10vh;
+            margin-top: 1px;
         }
         .sub-chart {
             width: 100%;
-            height: 22vh;
+            height: 20vh;
             margin-top: 3px;
         }
         .nav-buttons {
@@ -138,6 +173,23 @@
         .nav-btn:hover {
             background: rgba(0, 212, 255, 0.4);
         }
+        .interval-select {
+            background: rgba(0, 212, 255, 0.15);
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            color: #00d4ff;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            outline: none;
+        }
+        .interval-select:hover {
+            background: rgba(0, 212, 255, 0.3);
+        }
+        .interval-select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
         .countdown {
             color: #FFD700;
             font-size: 0.75rem;
@@ -145,7 +197,7 @@
             min-width: 30px;
         }
         .hover-change {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: bold;
         }
         .hover-change.up {
@@ -154,6 +206,13 @@
         .hover-change.down {
             color: #ef5350;
         }
+        .hover-ohlc {
+            font-size: 0.65rem;
+            color: #aaa;
+            margin-left: 4px;
+        }
+        .hover-ohlc .up { color: #26a69a; }
+        .hover-ohlc .down { color: #ef5350; }
         .daily-change {
             font-size: 0.75rem;
             font-weight: bold;
@@ -179,11 +238,24 @@
         <!-- Left Panel: XRP -->
         <div class="chart-panel" id="xrpPanel">
             <div class="chart-header">
-                <div class="chart-title">1분봉 (EMA50/EMA200)</div>
+                <div class="chart-title" id="xrpChartTitle">1분봉 (EMA50/EMA200)</div>
                 <div class="price-info">
+                    <select class="interval-select" id="xrpIntervalSelect">
+                        <option value="1m">1분</option>
+                        <option value="3m">3분</option>
+                        <option value="5m">5분</option>
+                        <option value="10m">10분</option>
+                        <option value="15m">15분</option>
+                        <option value="30m">30분</option>
+                        <option value="1h">1시간</option>
+                        <option value="1d">1일</option>
+                        <option value="7d">1주</option>
+                        <option value="30d">1달</option>
+                    </select>
                     <span class="coin-name">XRP 선물</span>
                     <span class="daily-change" id="xrpDailyChange">0%</span>
                     <span class="hover-change" id="xrpHoverChange"></span>
+                    <span class="hover-ohlc" id="xrpHoverOhlc"></span>
                     <span class="price" id="xrpPrice">-</span>
                     <span class="unit">USDT</span>
                     <div class="status">
@@ -197,6 +269,7 @@
                 </div>
             </div>
             <div class="main-chart" id="xrpChart"></div>
+            <div class="vol-chart" id="xrpVolChart"></div>
             <div class="sub-chart-title">SMI</div>
             <div class="sub-chart" id="xrpSmiChart"></div>
             <div class="sub-chart-title">MA Angles</div>
@@ -209,11 +282,24 @@
         <!-- Right Panel: BTC -->
         <div class="chart-panel" id="btcPanel">
             <div class="chart-header">
-                <div class="chart-title">1분봉 (EMA50/EMA200)</div>
+                <div class="chart-title" id="btcChartTitle">1분봉 (EMA50/EMA200)</div>
                 <div class="price-info">
+                    <select class="interval-select" id="btcIntervalSelect">
+                        <option value="1m">1분</option>
+                        <option value="3m">3분</option>
+                        <option value="5m">5분</option>
+                        <option value="10m">10분</option>
+                        <option value="15m">15분</option>
+                        <option value="30m">30분</option>
+                        <option value="1h">1시간</option>
+                        <option value="1d">1일</option>
+                        <option value="7d">1주</option>
+                        <option value="30d">1달</option>
+                    </select>
                     <span class="coin-name btc">BTC 선물</span>
                     <span class="daily-change" id="btcDailyChange">0%</span>
                     <span class="hover-change" id="btcHoverChange"></span>
+                    <span class="hover-ohlc" id="btcHoverOhlc"></span>
                     <span class="price" id="btcPrice">-</span>
                     <span class="unit">USDT</span>
                     <div class="status">
@@ -226,6 +312,7 @@
                 </div>
             </div>
             <div class="main-chart" id="btcChart"></div>
+            <div class="vol-chart" id="btcVolChart"></div>
             <div class="sub-chart-title">SMI</div>
             <div class="sub-chart" id="btcSmiChart"></div>
             <div class="sub-chart-title">MA Angles</div>
@@ -251,8 +338,8 @@
         const btcPanel = document.getElementById('btcPanel');
         const divider = document.getElementById('divider');
 
-        // 초기 50:50
-        let leftRatio = 0.5;
+        // 초기 2:1 (XRP 2/3, BTC 1/3)
+        let leftRatio = 2 / 3;
         function applyPanelSizes() {
             const totalWidth = splitContainer.clientWidth - divider.offsetWidth;
             xrpPanel.style.width = (totalWidth * leftRatio) + 'px';
@@ -261,30 +348,34 @@
         applyPanelSizes();
 
         let isDragging = false;
-        divider.addEventListener('mousedown', (e) => {
+        function onDividerStart(e) {
             isDragging = true;
             divider.classList.add('active');
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
             e.preventDefault();
-        });
-        document.addEventListener('mousemove', (e) => {
+        }
+        function onDividerMove(clientX) {
             if (!isDragging) return;
             const rect = splitContainer.getBoundingClientRect();
-            const dividerWidth = divider.offsetWidth;
-            const x = e.clientX - rect.left;
-            const totalWidth = rect.width - dividerWidth;
+            const x = clientX - rect.left;
             leftRatio = Math.max(0.15, Math.min(0.85, x / rect.width));
             applyPanelSizes();
             window.dispatchEvent(new Event('resize'));
-        });
-        document.addEventListener('mouseup', () => {
+        }
+        function onDividerEnd() {
             if (!isDragging) return;
             isDragging = false;
             divider.classList.remove('active');
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
-        });
+        }
+        divider.addEventListener('mousedown', onDividerStart);
+        document.addEventListener('mousemove', (e) => onDividerMove(e.clientX));
+        document.addEventListener('mouseup', onDividerEnd);
+        divider.addEventListener('touchstart', (e) => { onDividerStart(e); }, { passive: false });
+        document.addEventListener('touchmove', (e) => { if (isDragging) { e.preventDefault(); onDividerMove(e.touches[0].clientX); } }, { passive: false });
+        document.addEventListener('touchend', onDividerEnd);
 
         window.addEventListener('resize', applyPanelSizes);
 
@@ -315,24 +406,43 @@
                     secondsVisible: false,
                     barSpacing: 12,
                     minBarSpacing: 5,
-                    rightOffset: 10,
+                    rightOffset: 5,
                 },
             };
         }
 
+        const INTERVAL_LABELS = {
+            '1m': '1분봉', '3m': '3분봉', '5m': '5분봉', '10m': '10분봉',
+            '15m': '15분봉', '30m': '30분봉', '1h': '1시간봉',
+            '1d': '1일봉', '7d': '1주봉', '30d': '1달봉'
+        };
+
         // 코인별 차트 셋업 함수
         function setupCoinCharts(config) {
-            const { prefix, streamUrl, candlesUrl, smiUrl, maAnglesUrl, emaCloudUrl, pricePrecision, priceMinMove, updateTitle, titleLabel } = config;
+            const { prefix, streamUrl, candlesUrl, smiUrl, maAnglesUrl, emaCloudUrl, intervalChangeUrl, pricePrecision, priceMinMove, updateTitle, titleLabel } = config;
+            let currentInterval = '1m';
 
             // DOM elements
             const priceEl = document.getElementById(prefix + 'Price');
             const statusDot = document.getElementById(prefix + 'StatusDot');
             const hoverChangeEl = document.getElementById(prefix + 'HoverChange');
+            const hoverOhlcEl = document.getElementById(prefix + 'HoverOhlc');
             const dailyChangeEl = document.getElementById(prefix + 'DailyChange');
 
             // Main chart
             const chartContainer = document.getElementById(prefix + 'Chart');
             const chart = LightweightCharts.createChart(chartContainer, createChartOptions());
+
+            // Volume chart
+            const volContainer = document.getElementById(prefix + 'VolChart');
+            const volChart = LightweightCharts.createChart(volContainer, {
+                ...createChartOptions(),
+                rightPriceScale: {
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    scaleMargins: { top: 0.1, bottom: 0.1 },
+                    autoScale: true,
+                },
+            });
 
             // SMI chart
             const smiContainer = document.getElementById(prefix + 'SmiChart');
@@ -342,21 +452,82 @@
             const maAnglesContainer = document.getElementById(prefix + 'MaAnglesChart');
             const maAnglesChart = LightweightCharts.createChart(maAnglesContainer, createChartOptions());
 
-            // 차트 시간축 동기화
+            // 차트 시간축 동기화 (논리적 범위 → 스케일 유지, 시간 정렬)
             let isSyncing = false;
-            function syncChartsTimeRange(sourceChart, timeRange) {
-                if (isSyncing || !timeRange) return;
+            function syncFrom(sourceChart) {
+                if (isSyncing) return;
+                const lr = sourceChart.timeScale().getVisibleLogicalRange();
+                if (!lr) return;
                 isSyncing = true;
                 try {
-                    if (sourceChart !== chart) chart.timeScale().setVisibleRange(timeRange);
-                    if (sourceChart !== smiChart) smiChart.timeScale().setVisibleRange(timeRange);
-                    if (sourceChart !== maAnglesChart) maAnglesChart.timeScale().setVisibleRange(timeRange);
+                    [chart, volChart, smiChart, maAnglesChart].forEach(c => {
+                        if (c !== sourceChart) c.timeScale().setVisibleLogicalRange(lr);
+                    });
                 } catch (e) {}
                 isSyncing = false;
             }
-            chart.timeScale().subscribeVisibleTimeRangeChange(range => syncChartsTimeRange(chart, range));
-            smiChart.timeScale().subscribeVisibleTimeRangeChange(range => syncChartsTimeRange(smiChart, range));
-            maAnglesChart.timeScale().subscribeVisibleTimeRangeChange(range => syncChartsTimeRange(maAnglesChart, range));
+            chart.timeScale().subscribeVisibleLogicalRangeChange(() => syncFrom(chart));
+            volChart.timeScale().subscribeVisibleLogicalRangeChange(() => syncFrom(volChart));
+            smiChart.timeScale().subscribeVisibleLogicalRangeChange(() => syncFrom(smiChart));
+            maAnglesChart.timeScale().subscribeVisibleLogicalRangeChange(() => syncFrom(maAnglesChart));
+
+            // EMA Cloud canvas overlay (두 EMA 선 사이만 색칠)
+            const emaCanvas = document.createElement('canvas');
+            emaCanvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:2;';
+            chartContainer.style.position = 'relative';
+            chartContainer.appendChild(emaCanvas);
+            let emaCloudRawData = [];
+
+            function drawEmaCloud() {
+                const dpr = window.devicePixelRatio || 1;
+                const w = chartContainer.clientWidth;
+                const h = chartContainer.clientHeight;
+                emaCanvas.width = w * dpr;
+                emaCanvas.height = h * dpr;
+                emaCanvas.style.width = w + 'px';
+                emaCanvas.style.height = h + 'px';
+                const ctx = emaCanvas.getContext('2d');
+                ctx.scale(dpr, dpr);
+                ctx.clearRect(0, 0, w, h);
+                if (emaCloudRawData.length < 2) return;
+
+                let i = 0;
+                while (i < emaCloudRawData.length) {
+                    const d = emaCloudRawData[i];
+                    const isUp = d.fast > d.slow;
+                    const isDown = d.fast < d.slow;
+                    if (!isUp && !isDown) { i++; continue; }
+
+                    const segment = [];
+                    while (i < emaCloudRawData.length) {
+                        const dd = emaCloudRawData[i];
+                        const sameDir = isUp ? (dd.fast >= dd.slow) : (dd.fast <= dd.slow);
+                        if (!sameDir) break;
+                        const x = chart.timeScale().timeToCoordinate(dd.time);
+                        const yFast = fastEMASeries.priceToCoordinate(dd.fast);
+                        const ySlow = slowEMASeries.priceToCoordinate(dd.slow);
+                        if (x !== null && yFast !== null && ySlow !== null) {
+                            segment.push({ x, yFast, ySlow });
+                        }
+                        i++;
+                    }
+                    if (segment.length < 2) continue;
+
+                    ctx.beginPath();
+                    ctx.moveTo(segment[0].x, segment[0].yFast);
+                    for (let j = 1; j < segment.length; j++) {
+                        ctx.lineTo(segment[j].x, segment[j].yFast);
+                    }
+                    for (let j = segment.length - 1; j >= 0; j--) {
+                        ctx.lineTo(segment[j].x, segment[j].ySlow);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = isUp ? 'rgba(0, 200, 0, 0.15)' : 'rgba(200, 0, 0, 0.15)';
+                    ctx.fill();
+                }
+            }
+
+            chart.timeScale().subscribeVisibleLogicalRangeChange(drawEmaCloud);
 
             // Candlestick series
             const candlestickSeries = chart.addCandlestickSeries({
@@ -377,19 +548,6 @@
                 priceLineWidth: 1,
             });
 
-            // EMA Cloud series
-            const emaCloudUpSeries = chart.addAreaSeries({
-                topColor: 'rgba(0, 255, 0, 0.3)',
-                bottomColor: 'rgba(0, 255, 0, 0.1)',
-                lineColor: 'transparent',
-                priceLineVisible: false,
-            });
-            const emaCloudDownSeries = chart.addAreaSeries({
-                topColor: 'rgba(255, 0, 0, 0.3)',
-                bottomColor: 'rgba(255, 0, 0, 0.1)',
-                lineColor: 'transparent',
-                priceLineVisible: false,
-            });
             const fastEMASeries = chart.addLineSeries({
                 color: '#FFD700',
                 lineWidth: 2,
@@ -446,13 +604,7 @@
             });
 
             // MA Angles series
-            const maAnglesZeroLine = maAnglesChart.addLineSeries({
-                color: 'rgba(150, 150, 150, 0.5)',
-                lineWidth: 1,
-                lineStyle: 2,
-                priceLineVisible: false,
-            });
-            // 4색 영역 그래프: 2개 baselineSeries를 겹침
+            // 4색 영역 그래프: 2개 baselineSeries를 겹침 (먼저 추가 → 뒤에 렌더)
             // 연한 색 (하단 레이어) - slope방향과 ma27 트렌드 불일치
             const maAnglesLightSeries = maAnglesChart.addBaselineSeries({
                 baseValue: { type: 'price', price: 0 },
@@ -477,23 +629,217 @@
                 priceLineVisible: false,
                 lastValueVisible: false,
             });
+            // 0 기준 점선 (baseline 뒤에 추가 → 맨 앞에 렌더)
+            const maAnglesZeroLine = maAnglesChart.addLineSeries({
+                color: 'rgba(150, 150, 150, 0.5)',
+                lineWidth: 1,
+                lineStyle: 2,
+                priceLineVisible: false,
+            });
+
+            // Volume series
+            const volSeries = volChart.addHistogramSeries({
+                priceFormat: { type: 'volume' },
+                priceLineVisible: false,
+                lastValueVisible: false,
+            });
+            const volMaSeries = volChart.addLineSeries({
+                color: '#FFD700',
+                lineWidth: 1,
+                priceLineVisible: false,
+                lastValueVisible: false,
+            });
+
+            // 시간축 정렬용 투명 시리즈 (서브 차트가 캔들과 같은 시간 범위를 갖도록)
+            const paddingOpts = { color: 'transparent', lineWidth: 0, priceLineVisible: false, lastValueVisible: false };
+            const smiPaddingSeries = smiChart.addLineSeries(paddingOpts);
+            const maPaddingSeries = maAnglesChart.addLineSeries(paddingOpts);
 
             // State
             let currentCandleData = [];
+            let currentMarkers = [];
             let isFirstLoad = true;
             let totalCandles = 0;
-            let futureTimeSeries = null;
+            let lastCandleTime = 0;
 
-            // Load candles and indicators
-            async function loadCandles() {
+            // [전략2] Zone 스캔: SMI <= -40 과매도 구간 내 반등 감지
+            function scanOversoldZone(smiByTime, candles, currentIdx) {
+                const smiCur = smiByTime.get(candles[currentIdx].time);
+                if (!smiCur || smiCur.smi > -40) return { valid: false };
+
+                let dwellCount = 1; // 현재 봉 포함
+                let minSmi = smiCur.smi;
+                for (let j = currentIdx - 1; j >= 0; j--) {
+                    const sp = smiByTime.get(candles[j].time);
+                    if (!sp) break;
+                    if (sp.smi <= -40) {
+                        dwellCount++;
+                        minSmi = Math.min(minSmi, sp.smi);
+                    } else {
+                        break;
+                    }
+                }
+                return { valid: dwellCount >= 4 && smiCur.smi > minSmi, extremeSmi: minSmi, dwellCount };
+            }
+
+            // [전략2] Zone 스캔: SMI >= +40 과매수 구간 내 반전 감지
+            function scanOverboughtZone(smiByTime, candles, currentIdx) {
+                const smiCur = smiByTime.get(candles[currentIdx].time);
+                if (!smiCur || smiCur.smi < 40) return { valid: false };
+
+                let dwellCount = 1; // 현재 봉 포함
+                let maxSmi = smiCur.smi;
+                for (let j = currentIdx - 1; j >= 0; j--) {
+                    const sp = smiByTime.get(candles[j].time);
+                    if (!sp) break;
+                    if (sp.smi >= 40) {
+                        dwellCount++;
+                        maxSmi = Math.max(maxSmi, sp.smi);
+                    } else {
+                        break;
+                    }
+                }
+                return { valid: dwellCount >= 4 && smiCur.smi < maxSmi, extremeSmi: maxSmi, dwellCount };
+            }
+
+            // 마커 생성 함수
+            function buildMarkers(candles, chartData, smiResult, maAnglesResult, emaCloudResult) {
+                const markers = [];
+                const emaByTime = new Map();
+                if (emaCloudResult.data) emaCloudResult.data.forEach(d => emaByTime.set(d.time, d));
+                const maByTime = new Map();
+                if (maAnglesResult.data) maAnglesResult.data.forEach(d => maByTime.set(d.time, d));
+                const smiByTime = new Map();
+                (smiResult.data || []).forEach(d => smiByTime.set(d.time, d));
+
+                let oversoldSignaled = false;
+                let overboughtSignaled = false;
+                for (let si = 1; si < candles.length; si++) {
+                    const t = candles[si].time;
+                    const tPrev = candles[si - 1].time;
+                    const ema = emaByTime.get(t);
+                    const ma = maByTime.get(t);
+                    const smiCur = smiByTime.get(t);
+                    const smiPrev = smiByTime.get(tPrev);
+                    if (!ema || !ma || !smiCur || !smiPrev) continue;
+
+                    // [전략1] 롱포지션 — 비활성화
+                    /*
+                    if (ema.upTrend) {
+                        const smiCrossUp = smiCur.smi > smiCur.signal && smiPrev.smi <= smiPrev.signal;
+                        const nearOversold = smiPrev.smi >= -60 && smiPrev.smi <= -25;
+                        if (smiCrossUp && nearOversold && ma.jmaSlope >= 0) {
+                            markers.push({ time: t + KST_OFFSET, position: 'belowBar', color: '#00ff88', shape: 'arrowUp', text: '[전략1]롱포지션' });
+                        }
+                    }
+                    // [전략1] 숏포지션
+                    if (ema.downTrend) {
+                        const smiCrossDown = smiCur.smi < smiCur.signal && smiPrev.smi >= smiPrev.signal;
+                        const nearOverbought = smiPrev.smi >= 25 && smiPrev.smi <= 60;
+                        if (smiCrossDown && nearOverbought && ma.jmaSlope < 0) {
+                            markers.push({ time: t + KST_OFFSET, position: 'aboveBar', color: '#ff4444', shape: 'arrowDown', text: '[전략1]숏포지션' });
+                        }
+                    }
+                    */
+
+                    // 롱 신호: 구간 내 최초만 표시, 전략2 우선
+                    const oversoldZone = scanOversoldZone(smiByTime, candles, si);
+                    if (oversoldZone.valid && !oversoldSignaled) {
+                        if (ema.upTrend && ma.jmaSlope >= 0) {
+                            oversoldSignaled = true;
+                            markers.push({ time: t + KST_OFFSET, position: 'belowBar', color: '#00ccff', shape: 'arrowUp', text: '롱포지션' });
+                        } else if (ma.jmaSlope >= 0) {
+                            oversoldSignaled = true;
+                            markers.push({ time: t + KST_OFFSET, position: 'belowBar', color: '#aa00ff', shape: 'arrowUp', text: '롱포지션' });
+                        }
+                    }
+                    if (!smiCur || smiCur.smi > -40) oversoldSignaled = false;
+
+                    // 숏 신호: 구간 내 최초만 표시, 전략2 우선
+                    const overboughtZone = scanOverboughtZone(smiByTime, candles, si);
+                    if (overboughtZone.valid && !overboughtSignaled) {
+                        if (ema.downTrend && ma.jmaSlope < 0) {
+                            overboughtSignaled = true;
+                            markers.push({ time: t + KST_OFFSET, position: 'aboveBar', color: '#ff8800', shape: 'arrowDown', text: '숏포지션' });
+                        } else if (ma.jmaSlope < 0) {
+                            overboughtSignaled = true;
+                            markers.push({ time: t + KST_OFFSET, position: 'aboveBar', color: '#ffff00', shape: 'arrowDown', text: '숏포지션' });
+                        }
+                    }
+                    if (!smiCur || smiCur.smi < 40) overboughtSignaled = false;
+                }
+
+                if (chartData.length > 0) {
+                    const lastCandle = chartData[chartData.length - 1];
+                    const changePercent = ((lastCandle.close - lastCandle.open) / lastCandle.open * 100).toFixed(2);
+                    const isUp = lastCandle.close >= lastCandle.open;
+                    markers.push({ time: lastCandle.time, position: 'aboveBar', color: isUp ? '#26a69a' : '#ef5350', shape: 'arrowDown', text: (isUp ? '+' : '') + changePercent + '%' });
+                }
+
+                markers.sort((a, b) => a.time - b.time);
+                return markers;
+            }
+
+            // 캔들만 빠르게 업데이트 (매초)
+            async function quickUpdate() {
                 try {
-                    const currentRange = !isFirstLoad ? chart.timeScale().getVisibleRange() : null;
+                    const res = await fetch(candlesUrl + '?interval=' + currentInterval);
+                    const candles = await res.json();
+                    if (candles.length === 0) return;
 
+                    const last = candles[candles.length - 1];
+                    const lastKst = last.time + KST_OFFSET;
+
+                    // 새 봉이 추가되면 전체 갱신
+                    if (lastKst > lastCandleTime) {
+                        await fullLoad();
+                        return;
+                    }
+
+                    // 같은 봉이면 마지막 캔들만 update
+                    candlestickSeries.update({
+                        time: lastKst,
+                        open: last.open,
+                        high: last.high,
+                        low: last.low,
+                        close: last.close
+                    });
+
+                    // 마지막 봉 등락률 마커 갱신
+                    currentCandleData[currentCandleData.length - 1] = {
+                        time: lastKst, open: last.open, high: last.high, low: last.low, close: last.close
+                    };
+                    const changePercent = ((last.close - last.open) / last.open * 100).toFixed(2);
+                    const isUp = last.close >= last.open;
+                    const filtered = currentMarkers.filter(m => !(m.time === lastKst && m.text && m.text.includes('%')));
+                    filtered.push({ time: lastKst, position: 'aboveBar', color: isUp ? '#26a69a' : '#ef5350', shape: 'arrowDown', text: (isUp ? '+' : '') + changePercent + '%' });
+                    filtered.sort((a, b) => a.time - b.time);
+                    currentMarkers = filtered;
+                    candlestickSeries.setMarkers(currentMarkers);
+                } catch (e) {
+                    console.error('Quick update failed for ' + prefix + ':', e);
+                }
+            }
+
+            // 시리즈 데이터 초기 setData 또는 증분 update 헬퍼
+            function applyData(series, data, init) {
+                if (data.length === 0) return;
+                if (init) {
+                    series.setData(data);
+                } else {
+                    // 마지막 2개만 update (직전 봉 확정값 + 새 봉)
+                    for (let i = Math.max(0, data.length - 2); i < data.length; i++) {
+                        series.update(data[i]);
+                    }
+                }
+            }
+
+            // 전체 데이터 로드 (초기) 또는 증분 업데이트 (새 봉)
+            async function fullLoad() {
+                try {
+                    const qs = '?interval=' + currentInterval;
                     const [candlesResponse, smiResponse, maAnglesResponse, emaCloudResponse] = await Promise.all([
-                        fetch(candlesUrl),
-                        fetch(smiUrl),
-                        fetch(maAnglesUrl),
-                        fetch(emaCloudUrl)
+                        fetch(candlesUrl + qs), fetch(smiUrl + qs), fetch(maAnglesUrl + qs), fetch(emaCloudUrl + qs)
                     ]);
 
                     const candles = await candlesResponse.json();
@@ -503,185 +849,118 @@
 
                     if (candles.length === 0) return;
 
+                    const init = isFirstLoad;
+
                     const chartData = candles.map(c => ({
-                        time: c.time + KST_OFFSET,
-                        open: c.open,
-                        high: c.high,
-                        low: c.low,
-                        close: c.close
+                        time: c.time + KST_OFFSET, open: c.open, high: c.high, low: c.low, close: c.close
                     }));
 
                     const lastTime = chartData[chartData.length - 1].time;
-                    const futureData = [];
-                    for (let i = 1; i <= 60; i++) {
-                        futureData.push({ time: lastTime + (i * 60) });
-                    }
-
                     totalCandles = chartData.length;
-                    candlestickSeries.setData(chartData);
+                    applyData(candlestickSeries, chartData, init);
 
-                    if (!futureTimeSeries) {
-                        futureTimeSeries = chart.addLineSeries({
-                            color: 'transparent',
-                            lineWidth: 0,
-                            priceLineVisible: false,
-                            lastValueVisible: false,
-                        });
+                    // 거래량 차트
+                    const VOL_MA_LEN = 20;
+                    const volData = candles.map(c => ({
+                        time: c.time + KST_OFFSET,
+                        value: c.volume,
+                        color: c.close >= c.open ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)'
+                    }));
+                    applyData(volSeries, volData, init);
+
+                    // 거래량 이동평균 (20봉 SMA)
+                    const volMaData = [];
+                    for (let vi = 0; vi < candles.length; vi++) {
+                        if (vi < VOL_MA_LEN - 1) continue;
+                        let vSum = 0;
+                        for (let vj = 0; vj < VOL_MA_LEN; vj++) vSum += candles[vi - vj].volume;
+                        volMaData.push({ time: candles[vi].time + KST_OFFSET, value: vSum / VOL_MA_LEN });
                     }
-                    futureTimeSeries.setData(futureData);
+                    applyData(volMaSeries, volMaData, init);
+
+                    // SMI/MA 차트 시간축을 캔들과 동일하게 맞춤
+                    const timePadding = chartData.map(c => ({ time: c.time, value: 0 }));
+                    applyData(smiPaddingSeries, timePadding, init);
+                    applyData(maPaddingSeries, timePadding, init);
 
                     // EMA Cloud
                     if (emaCloudResult.data && emaCloudResult.data.length > 0) {
                         const fastEMA = emaCloudResult.data.map(d => ({ time: d.time + KST_OFFSET, value: d.fastEMA }));
                         const slowEMA = emaCloudResult.data.map(d => ({ time: d.time + KST_OFFSET, value: d.slowEMA }));
-                        const upCloudData = emaCloudResult.data.map(d => ({
-                            time: d.time + KST_OFFSET,
-                            value: d.upTrend ? d.fastEMA : d.slowEMA
+                        emaCloudRawData = emaCloudResult.data.map(d => ({
+                            time: d.time + KST_OFFSET, fast: d.fastEMA, slow: d.slowEMA
                         }));
-                        const downCloudData = emaCloudResult.data.map(d => ({
-                            time: d.time + KST_OFFSET,
-                            value: d.downTrend ? d.fastEMA : d.slowEMA
-                        }));
-                        emaCloudUpSeries.setData(upCloudData);
-                        emaCloudDownSeries.setData(downCloudData);
-                        fastEMASeries.setData(fastEMA);
-                        slowEMASeries.setData(slowEMA);
+                        applyData(fastEMASeries, fastEMA, init);
+                        applyData(slowEMASeries, slowEMA, init);
+                        setTimeout(drawEmaCloud, 50);
                     }
 
                     // SMI
                     if (smiResult.data && smiResult.data.length > 0) {
                         const smi = smiResult.data.map(d => ({ time: d.time + KST_OFFSET, value: d.smi }));
                         const signal = smiResult.data.map(d => ({ time: d.time + KST_OFFSET, value: d.signal }));
-                        const lineData40 = smi.map(s => ({ time: s.time, value: smiResult.overbought }));
-                        const lineDataMinus40 = smi.map(s => ({ time: s.time, value: smiResult.oversold }));
-                        overboughtLine.setData(lineData40);
-                        oversoldLine.setData(lineDataMinus40);
-                        overboughtSeries.setData(smi);
-                        oversoldSeries.setData(smi);
-                        smiLineSeries.setData(smi);
-                        smiSignalSeries.setData(signal);
+                        const obLine = smi.map(s => ({ time: s.time, value: smiResult.overbought }));
+                        const osLine = smi.map(s => ({ time: s.time, value: smiResult.oversold }));
+                        applyData(overboughtLine, obLine, init);
+                        applyData(oversoldLine, osLine, init);
+                        applyData(overboughtSeries, smi, init);
+                        applyData(oversoldSeries, smi, init);
+                        applyData(smiLineSeries, smi, init);
+                        applyData(smiSignalSeries, signal, init);
                     }
 
-                    // MA Angles (4색 영역 그래프)
+                    // MA Angles
                     if (maAnglesResult.data && maAnglesResult.data.length > 0) {
-                        const zeroLine = maAnglesResult.data.map(d => ({ time: d.time + KST_OFFSET, value: 0 }));
-                        maAnglesZeroLine.setData(zeroLine);
-
-                        // 연한 색: slope방향과 ma27 트렌드 불일치 구간만 값 표시
+                        const maZero = maAnglesResult.data.map(d => ({ time: d.time + KST_OFFSET, value: 0 }));
                         const lightData = maAnglesResult.data.map(d => {
                             const unconfirmed = (d.jmaSlope >= 0 && !d.ma27Rising) || (d.jmaSlope < 0 && !d.ma27Falling);
                             return { time: d.time + KST_OFFSET, value: unconfirmed ? d.jmaSlope : 0 };
                         });
-                        // 진한 색: slope방향과 ma27 트렌드 일치 구간만 값 표시
                         const darkData = maAnglesResult.data.map(d => {
                             const confirmed = (d.jmaSlope >= 0 && d.ma27Rising) || (d.jmaSlope < 0 && d.ma27Falling);
                             return { time: d.time + KST_OFFSET, value: confirmed ? d.jmaSlope : 0 };
                         });
-                        maAnglesLightSeries.setData(lightData);
-                        maAnglesDarkSeries.setData(darkData);
+                        applyData(maAnglesZeroLine, maZero, init);
+                        applyData(maAnglesLightSeries, lightData, init);
+                        applyData(maAnglesDarkSeries, darkData, init);
                     }
 
                     currentCandleData = chartData;
+                    currentMarkers = buildMarkers(candles, chartData, smiResult, maAnglesResult, emaCloudResult);
+                    candlestickSeries.setMarkers(currentMarkers);
 
-                    // === 롱/숏 포지션 신호 감지 ===
-                    const markers = [];
-
-                    // 인디케이터 데이터를 time 기준 Map으로 변환
-                    const emaByTime = new Map();
-                    if (emaCloudResult.data) {
-                        emaCloudResult.data.forEach(d => emaByTime.set(d.time, d));
-                    }
-                    const maByTime = new Map();
-                    if (maAnglesResult.data) {
-                        maAnglesResult.data.forEach(d => maByTime.set(d.time, d));
-                    }
-                    const smiByTime = new Map();
-                    const smiDataArr = smiResult.data || [];
-                    smiDataArr.forEach(d => smiByTime.set(d.time, d));
-
-                    // 거래량 이동평균 (20봉 SMA)
-                    const VOL_MA_LEN = 20;
-                    const volumeMA = new Array(candles.length).fill(0);
-                    for (let vi = VOL_MA_LEN - 1; vi < candles.length; vi++) {
-                        let vSum = 0;
-                        for (let vj = 0; vj < VOL_MA_LEN; vj++) vSum += candles[vi - vj].volume;
-                        volumeMA[vi] = vSum / VOL_MA_LEN;
-                    }
-
-                    for (let si = 1; si < candles.length; si++) {
-                        const t = candles[si].time;
-                        const tPrev = candles[si - 1].time;
-                        const ema = emaByTime.get(t);
-                        const ma = maByTime.get(t);
-                        const smiCur = smiByTime.get(t);
-                        const smiPrev = smiByTime.get(tPrev);
-                        if (!ema || !ma || !smiCur || !smiPrev) continue;
-                        const volOk = si >= VOL_MA_LEN && candles[si - 1].volume > volumeMA[si - 1];
-                        if (!volOk) continue;
-
-                        // --- 롱포지션: 상승 트렌드 ---
-                        // SMI 크로스: -40 이하 또는 -40 약간 위(-20 이하)에서 상향 크로스
-                        if (ema.upTrend) {
-                            const smiCrossUp = smiCur.smi > smiCur.signal && smiPrev.smi <= smiPrev.signal;
-                            const nearOversold = smiPrev.smi >= -55 && smiPrev.smi <= -25;
-                            if (smiCrossUp && nearOversold && ma.jmaSlope >= 0 && ma.ma27Rising) {
-                                markers.push({
-                                    time: t + KST_OFFSET,
-                                    position: 'belowBar',
-                                    color: '#00ff88',
-                                    shape: 'arrowUp',
-                                    text: '롱포지션'
-                                });
-                            }
-                        }
-
-                        // --- 숏포지션: 하락 트렌드 ---
-                        // SMI 크로스: +40 이상 또는 +40 약간 아래(+20 이상)에서 하향 크로스
-                        if (ema.downTrend) {
-                            const smiCrossDown = smiCur.smi < smiCur.signal && smiPrev.smi >= smiPrev.signal;
-                            const nearOverbought = smiPrev.smi >= 25 && smiPrev.smi <= 55;
-                            if (smiCrossDown && nearOverbought && ma.jmaSlope < 0 && ma.ma27Falling) {
-                                markers.push({
-                                    time: t + KST_OFFSET,
-                                    position: 'aboveBar',
-                                    color: '#ff4444',
-                                    shape: 'arrowDown',
-                                    text: '숏포지션'
-                                });
-                            }
-                        }
-                    }
-
-                    // 마지막 봉 등락률 마커
-                    if (chartData.length > 0) {
-                        const lastCandle = chartData[chartData.length - 1];
-                        const changePercent = ((lastCandle.close - lastCandle.open) / lastCandle.open * 100).toFixed(2);
-                        const isUp = lastCandle.close >= lastCandle.open;
-                        markers.push({
-                            time: lastCandle.time,
-                            position: 'aboveBar',
-                            color: isUp ? '#26a69a' : '#ef5350',
-                            shape: 'arrowDown',
-                            text: (isUp ? '+' : '') + changePercent + '%'
-                        });
-                    }
-
-                    markers.sort((a, b) => a.time - b.time);
-                    candlestickSeries.setMarkers(markers);
+                    lastCandleTime = lastTime;
 
                     if (isFirstLoad) {
                         chart.timeScale().scrollToRealTime();
                         isFirstLoad = false;
-                    } else if (currentRange) {
-                        chart.timeScale().setVisibleRange(currentRange);
                     }
                 } catch (e) {
-                    console.error('Failed to load candles for ' + prefix + ':', e);
+                    console.error('Full load failed for ' + prefix + ':', e);
                 }
             }
 
-            loadCandles();
-            setInterval(loadCandles, 1000);
+            fullLoad();
+            setInterval(quickUpdate, 1000);
+
+            // Interval selectbox handler
+            const intervalSelect = document.getElementById(prefix + 'IntervalSelect');
+            const chartTitleEl = document.getElementById(prefix + 'ChartTitle');
+            if (intervalSelect) {
+                intervalSelect.addEventListener('change', async (e) => {
+                    const newInterval = e.target.value;
+                    currentInterval = newInterval;
+                    // Update chart title
+                    if (chartTitleEl) {
+                        chartTitleEl.textContent = (INTERVAL_LABELS[newInterval] || newInterval) + ' (EMA50/EMA200)';
+                    }
+                    // POST interval change to server
+                    await fetch(intervalChangeUrl + '?interval=' + newInterval, { method: 'POST' });
+                    // Force full reload
+                    isFirstLoad = true;
+                    await fullLoad();
+                });
+            }
 
             // Price SSE stream
             function connect() {
@@ -718,8 +997,9 @@
             }
             connect();
 
-            // Crosshair sync
+            // Crosshair sync — 사용자가 직접 호버 중인 차트를 추적하여 되돌림 방지
             let isCrosshairSyncing = false;
+            let activeChart = null;
             function getCrosshairDataPoint(series, param) {
                 if (!param || !param.time || !param.seriesData) return null;
                 return param.seriesData.get(series) || null;
@@ -731,6 +1011,9 @@
                     if (sourceChart !== chart && point) {
                         chart.setCrosshairPosition(point.close || point.value || 0, time, candlestickSeries);
                     }
+                    if (sourceChart !== volChart) {
+                        volChart.setCrosshairPosition(0, time, volSeries);
+                    }
                     if (sourceChart !== smiChart) {
                         smiChart.setCrosshairPosition(0, time, smiLineSeries);
                     }
@@ -741,32 +1024,74 @@
                 isCrosshairSyncing = false;
             }
 
-            chart.subscribeCrosshairMove((param) => {
-                if (!param || !param.time) {
+            // 마우스 진입 시 activeChart 설정 → 해당 차트만 동기화 소스 허용
+            [
+                { el: chartContainer, c: chart },
+                { el: volContainer, c: volChart },
+                { el: smiContainer, c: smiChart },
+                { el: maAnglesContainer, c: maAnglesChart },
+            ].forEach(({ el, c }) => {
+                el.addEventListener('mouseenter', () => { activeChart = c; });
+                el.addEventListener('mouseleave', () => { if (activeChart === c) activeChart = null; });
+            });
+
+            // 봉 등락률 표시 (어느 차트에서든 호버 시)
+            function updateHoverChange(time) {
+                if (!time) {
                     hoverChangeEl.textContent = '';
                     hoverChangeEl.className = 'hover-change';
+                    hoverOhlcEl.innerHTML = '';
                     return;
                 }
-                const point = getCrosshairDataPoint(candlestickSeries, param);
-                syncCrosshair(chart, param.time, point);
-                const hoveredCandle = currentCandleData.find(c => c.time === param.time);
+                const hoveredCandle = currentCandleData.find(c => c.time === time);
                 if (hoveredCandle) {
                     const changePercent = ((hoveredCandle.close - hoveredCandle.open) / hoveredCandle.open * 100).toFixed(2);
                     const isUp = hoveredCandle.close >= hoveredCandle.open;
                     hoverChangeEl.textContent = (isUp ? '+' : '') + changePercent + '%';
                     hoverChangeEl.className = 'hover-change ' + (isUp ? 'up' : 'down');
+                    const p = pricePrecision;
+                    const idx = currentCandleData.indexOf(hoveredCandle);
+                    const prevClose = idx > 0 ? currentCandleData[idx - 1].close : hoveredCandle.open;
+                    function fmtPct(val) {
+                        const pct = ((val - prevClose) / prevClose * 100).toFixed(2);
+                        const up = val >= prevClose;
+                        return '<span class="' + (up ? 'up' : 'down') + '">' + val.toFixed(p) + '(' + (up ? '+' : '') + pct + '%)</span>';
+                    }
+                    hoverOhlcEl.innerHTML =
+                        '시가:' + fmtPct(hoveredCandle.open) + ' ' +
+                        '고가:' + fmtPct(hoveredCandle.high) + ' ' +
+                        '저가:' + fmtPct(hoveredCandle.low) + ' ' +
+                        '종가:' + fmtPct(hoveredCandle.close);
                 } else {
                     hoverChangeEl.textContent = '';
                     hoverChangeEl.className = 'hover-change';
+                    hoverOhlcEl.innerHTML = '';
                 }
+            }
+
+            chart.subscribeCrosshairMove((param) => {
+                if (!param || !param.time) { updateHoverChange(null); return; }
+                if (activeChart !== chart) return;
+                syncCrosshair(chart, param.time, getCrosshairDataPoint(candlestickSeries, param));
+                updateHoverChange(param.time);
+            });
+            volChart.subscribeCrosshairMove((param) => {
+                if (!param || !param.time) { updateHoverChange(null); return; }
+                if (activeChart !== volChart) return;
+                syncCrosshair(volChart, param.time, getCrosshairDataPoint(volSeries, param));
+                updateHoverChange(param.time);
             });
             smiChart.subscribeCrosshairMove((param) => {
-                if (!param || !param.time) return;
+                if (!param || !param.time) { updateHoverChange(null); return; }
+                if (activeChart !== smiChart) return;
                 syncCrosshair(smiChart, param.time, getCrosshairDataPoint(smiLineSeries, param));
+                updateHoverChange(param.time);
             });
             maAnglesChart.subscribeCrosshairMove((param) => {
-                if (!param || !param.time) return;
+                if (!param || !param.time) { updateHoverChange(null); return; }
+                if (activeChart !== maAnglesChart) return;
                 syncCrosshair(maAnglesChart, param.time, getCrosshairDataPoint(maAnglesDarkSeries, param));
+                updateHoverChange(param.time);
             });
 
             // Navigation
@@ -782,12 +1107,69 @@
                 }
             });
 
-            // Resize
+            // Resize (width + height)
             window.addEventListener('resize', () => {
-                chart.applyOptions({ width: chartContainer.clientWidth });
-                smiChart.applyOptions({ width: smiContainer.clientWidth });
-                maAnglesChart.applyOptions({ width: maAnglesContainer.clientWidth });
+                chart.applyOptions({ width: chartContainer.clientWidth, height: chartContainer.clientHeight });
+                volChart.applyOptions({ width: volContainer.clientWidth, height: volContainer.clientHeight });
+                smiChart.applyOptions({ width: smiContainer.clientWidth, height: smiContainer.clientHeight });
+                maAnglesChart.applyOptions({ width: maAnglesContainer.clientWidth, height: maAnglesContainer.clientHeight });
             });
+
+            // 수평 디바이더: 전체 높이 고정, 인접 차트 간 비율 교환
+            const chartEls = [chartContainer, volContainer, smiContainer, maAnglesContainer];
+            // 초기 픽셀 높이 캡처
+            let chartH = chartEls.map(el => el.offsetHeight);
+
+            function applyChartHeights() {
+                chartEls.forEach((el, i) => { el.style.height = chartH[i] + 'px'; });
+                window.dispatchEvent(new Event('resize'));
+            }
+
+            function setupHDivider(aboveIdx, belowIdx) {
+                const div = document.createElement('div');
+                div.className = 'h-divider';
+                chartEls[aboveIdx].after(div);
+
+                let dragging = false, startY, startAboveH, startBelowH;
+
+                function onHStart(clientY, e) {
+                    dragging = true;
+                    startY = clientY;
+                    startAboveH = chartH[aboveIdx];
+                    startBelowH = chartH[belowIdx];
+                    div.classList.add('active');
+                    document.body.style.cursor = 'row-resize';
+                    document.body.style.userSelect = 'none';
+                    e.preventDefault();
+                }
+                function onHMove(clientY) {
+                    if (!dragging) return;
+                    const dy = clientY - startY;
+                    const total = startAboveH + startBelowH;
+                    let newAbove = Math.max(30, Math.min(total - 30, startAboveH + dy));
+                    let newBelow = total - newAbove;
+                    chartH[aboveIdx] = newAbove;
+                    chartH[belowIdx] = newBelow;
+                    applyChartHeights();
+                }
+                function onHEnd() {
+                    if (!dragging) return;
+                    dragging = false;
+                    div.classList.remove('active');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+                div.addEventListener('mousedown', (e) => onHStart(e.clientY, e));
+                document.addEventListener('mousemove', (e) => onHMove(e.clientY));
+                document.addEventListener('mouseup', onHEnd);
+                div.addEventListener('touchstart', (e) => { onHStart(e.touches[0].clientY, e); }, { passive: false });
+                document.addEventListener('touchmove', (e) => { if (dragging) { e.preventDefault(); onHMove(e.touches[0].clientY); } }, { passive: false });
+                document.addEventListener('touchend', onHEnd);
+            }
+
+            setupHDivider(0, 1); // 메인차트 ↔ 거래량
+            setupHDivider(1, 2); // 거래량 ↔ SMI
+            setupHDivider(2, 3); // SMI ↔ MA Angles
         }
 
         // XRP 차트 셋업
@@ -798,6 +1180,7 @@
             smiUrl: /*[[@{/api/crypto/xrp/smi}]]*/ '/api/crypto/xrp/smi',
             maAnglesUrl: /*[[@{/api/crypto/xrp/ma-angles}]]*/ '/api/crypto/xrp/ma-angles',
             emaCloudUrl: /*[[@{/api/crypto/xrp/ema-cloud}]]*/ '/api/crypto/xrp/ema-cloud',
+            intervalChangeUrl: /*[[@{/api/crypto/xrp/interval}]]*/ '/api/crypto/xrp/interval',
             pricePrecision: 4,
             priceMinMove: 0.0001,
             updateTitle: true,
@@ -812,6 +1195,7 @@
             smiUrl: /*[[@{/api/crypto/btc/smi}]]*/ '/api/crypto/btc/smi',
             maAnglesUrl: /*[[@{/api/crypto/btc/ma-angles}]]*/ '/api/crypto/btc/ma-angles',
             emaCloudUrl: /*[[@{/api/crypto/btc/ema-cloud}]]*/ '/api/crypto/btc/ema-cloud',
+            intervalChangeUrl: /*[[@{/api/crypto/btc/interval}]]*/ '/api/crypto/btc/interval',
             pricePrecision: 1,
             priceMinMove: 0.1,
             updateTitle: false,

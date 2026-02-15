@@ -54,14 +54,14 @@ public class MAAnglesIndicatorService {
         // ATR(14) 계산
         double[] atr = calculateATR(high, low, close, 14);
 
-        // EMA(close, 10) 스무딩 - 종가 기준 (JMA 대신 EMA 사용)
-        double[] emaLine = calculateEMA(close, 10);
+        // JMA(close, 10) 스무딩 - 원본 Pine Script "ma angles - JD"와 동일
+        double[] jmaLine = calculateJMA(close, 10, 50, 2);
 
-        // slope = angle(emaLine)
+        // slope = angle(jmaLine)
         double[] jmaSlope = new double[size];
         for (int i = 1; i < size; i++) {
             if (atr[i] > 0) {
-                double diff = emaLine[i] - emaLine[i - 1];
+                double diff = jmaLine[i] - jmaLine[i - 1];
                 jmaSlope[i] = RAD2DEGREE * Math.atan(diff / atr[i]);
             }
         }

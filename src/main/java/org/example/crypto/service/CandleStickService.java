@@ -21,21 +21,26 @@ public class CandleStickService {
 
     private static final Logger log = LoggerFactory.getLogger(CandleStickService.class);
     private static final String CANDLE_API_URL =
-        "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=%s&interval=1m&limit=2000";
+        "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=%s&interval=%s&limit=2000";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RestTemplate restTemplate = new RestTemplate();
+    // key = "contract_interval", e.g. "XRP_USDT_1m"
     private final Map<String, List<CandleStick>> candleSticksMap = new ConcurrentHashMap<>();
+
+    private String makeKey(String contract, String interval) {
+        return contract + "_" + interval;
+    }
 
     @PostConstruct
     public void init() {
-        loadInitialCandles("XRP_USDT");
-        loadInitialCandles("BTC_USDT");
+        loadInitialCandles("XRP_USDT", "1m");
+        loadInitialCandles("BTC_USDT", "1m");
     }
 
-    public void loadInitialCandles(String contract) {
+    public void loadInitialCandles(String contract, String interval) {
         try {
-            String url = CANDLE_API_URL.formatted(contract);
+            String url = CANDLE_API_URL.formatted(contract, interval);
             log.info("Fetching candles from: {}", url);
             String response = restTemplate.getForObject(url, String.class);
             JsonNode candles = objectMapper.readTree(response);
@@ -54,17 +59,19 @@ public class CandleStickService {
 
             Collections.sort(initialCandles, (a, b) -> Long.compare(a.time(), b.time()));
 
-            List<CandleStick> list = candleSticksMap.computeIfAbsent(contract, k -> new CopyOnWriteArrayList<>());
+            String key = makeKey(contract, interval);
+            List<CandleStick> list = candleSticksMap.computeIfAbsent(key, k -> new CopyOnWriteArrayList<>());
             list.clear();
             list.addAll(initialCandles);
-            log.info("Loaded {} candles for {}", list.size(), contract);
+            log.info("Loaded {} candles for {} (interval={})", list.size(), contract, interval);
         } catch (Exception e) {
-            log.error("Failed to load initial candles for {}", contract, e);
+            log.error("Failed to load initial candles for {} (interval={})", contract, interval, e);
         }
     }
 
-    public void updateCandle(String contract, CandleStick candle) {
-        List<CandleStick> candleSticks = candleSticksMap.computeIfAbsent(contract, k -> new CopyOnWriteArrayList<>());
+    public void updateCandle(String contract, String interval, CandleStick candle) {
+        String key = makeKey(contract, interval);
+        List<CandleStick> candleSticks = candleSticksMap.computeIfAbsent(key, k -> new CopyOnWriteArrayList<>());
 
         if (candleSticks.isEmpty()) {
             candleSticks.add(candle);
@@ -83,27 +90,35 @@ public class CandleStickService {
         }
     }
 
-    /**
-     * 기존 XRP용 호환 메서드
-     */
-    public void updateCandle(CandleStick candle) {
-        updateCandle("XRP_USDT", candle);
+    public void updateCandle(String contract, CandleStick candle) {
+        updateCandle(contract, "1m", candle);
     }
 
-    public List<CandleStick> getCandles(String contract) {
-        List<CandleStick> list = candleSticksMap.get(contract);
+    public void updateCandle(CandleStick candle) {
+        updateCandle("XRP_USDT", "1m", candle);
+    }
+
+    public List<CandleStick> getCandles(String contract, String interval) {
+        String key = makeKey(contract, interval);
+        List<CandleStick> list = candleSticksMap.get(key);
         return list != null ? new ArrayList<>(list) : new ArrayList<>();
     }
 
-    /**
-     * 기존 XRP용 호환 메서드
-     */
+    public List<CandleStick> getCandles(String contract) {
+        return getCandles(contract, "1m");
+    }
+
     public List<CandleStick> getCandles() {
-        return getCandles("XRP_USDT");
+        return getCandles("XRP_USDT", "1m");
     }
 
     public CandleStick getLatestCandle(String contract) {
-        List<CandleStick> list = candleSticksMap.get(contract);
+        return getLatestCandle(contract, "1m");
+    }
+
+    public CandleStick getLatestCandle(String contract, String interval) {
+        String key = makeKey(contract, interval);
+        List<CandleStick> list = candleSticksMap.get(key);
         if (list == null || list.isEmpty()) {
             return null;
         }
@@ -111,6 +126,6 @@ public class CandleStickService {
     }
 
     public CandleStick getLatestCandle() {
-        return getLatestCandle("XRP_USDT");
+        return getLatestCandle("XRP_USDT", "1m");
     }
 }
